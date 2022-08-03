@@ -1,0 +1,104 @@
+---
+title: "Lokalsamfund"
+output: html_document
+date: '2022-08-01'
+---
+```{r}
+library(leaflet)
+library(tidyverse)
+library(geojsonio)
+library(sp)
+library(raster)
+library(rgdal)
+library(sf)
+```
+
+
+```{r}
+lokalsamfund <- rgdal::readOGR("data/communities.geojson", use_iconv = TRUE,  encoding = "UTF-8")
+```
+
+
+```{r}
+ lokalsamfund_proj <- spTransform(lokalsamfund, CRS("+proj=longlat +init=epsg:4326 +ellps=WGS84 +datum=WGS84 +no_defs"))
+```
+
+
+
+```{r}
+legepladser <- rgdal::readOGR("data/playgrounds.geojson", use_iconv = TRUE,  encoding = "UTF-8")
+```
+
+```{r}
+ legepladser_proj <- spTransform(legepladser, CRS("+proj=longlat +init=epsg:4326 +ellps=WGS84 +datum=WGS84 +no_defs"))
+```
+
+
+```{r}
+
+off_toiletter <- geojson_sf("data/offentlige_toiletter.geojson")
+```
+
+
+
+```{r}
+off_toiletter <- st_cast(off_toiletter, "POINT")
+```
+
+```{r}
+ off_toiletter <- st_transform(off_toiletter, crs = 4326)
+```
+
+
+
+
+
+# Hvor mange punkter falder inden for en polygon? 
+
+Vi konverterer det over til sf fordi sf har en st_intersects-funktionen 
+
+```{r}
+library(sf)
+
+sf_poly <- lokalsamfund_proj %>% st_as_sf()
+
+sf_points <- legepladser_proj %>%  st_as_sf()
+```
+
+
+
+```{r}
+playgrounds_sf_summary <-sf_poly %>% 
+  mutate(counts = lengths(st_intersects(., sf_points)))
+```
+
+
+
+```{r}
+cuts <- unique(quantile(playgrounds_sf_summary$counts, probs = seq(0, 1, 0.2)))
+cuts <- colorBin("Reds", domain = playgrounds_sf_summary$counts, bins = cuts)
+title_html <- '<div style="width: 400px;"><h1 style="font-size: 16px;">Kommunale legepladser i Aarhus Kommune</h1> <p style="font-size: 12px;"> Baseret på data fra <a href="https://www.opendata.dk/city-of-aarhus/legepladser">Aarhus Kommune</a></p> <p style="font-size: 12px;">Markørene viser hvor legepladserne ligger og farverne angiver hvor mange legepladser, der er inden for et givent lokalområde</div>'
+
+leaflet() %>% 
+  addProviderTiles("CartoDB.Positron", group = "Kort") %>% 
+  addProviderTiles("Esri.WorldImagery", group="Satelit") %>%
+  addPolygons(data=playgrounds_sf_summary, stroke = TRUE, color = "white", weight="", smoothFactor = 0.95, 
+              fillOpacity = 0.65, group = "Lokalområder", popup = ~paste0("<b>", playgrounds_sf_summary$distrikt, "</b><p>Antal Legepladser: ", playgrounds_sf_summary$counts, "</p>"), fillColor = ~cuts(playgrounds_sf_summary$counts)) %>% 
+  addCircleMarkers(data = legepladser_proj, radius = 5, color = "#007fff", popup = ~paste0("<h1>",lokation, "</h1><p>Adresse: ", adresse, "<p>"), group = "Legepladser") %>%
+  addCircleMarkers(data = off_toiletter, radius = 5, color = "#ff0000", popup = ~paste0("<h1>",navn, "</h1><p>Adresse: ", adresse, "<p>Beskrivelsen: ", beskrivelse, "</p>" ), group = "Toiletter") %>% 
+  addLegend(pal = cuts, 
+            values = playgrounds_sf_summary$hdp,
+            labFormat = labelFormat(suffix = " "),
+            opacity = 0.85, title = "Antal legepladser i lokalsamfund", position = "bottomleft") %>% 
+  addControl(title_html, position = "bottomright") %>% 
+   addLayersControl(overlayGroups = c("Lokalområder", "Legepladser", "Toiletter"), baseGroups = c("Kort","Satelit"), 
+                   options = layersControlOptions(collapsed = FALSE)) %>% 
+  htmlwidgets::onRender("
+        function() {
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center; font-weight:bold;\">Vælg hvad du vil se på markeret på kortet:</label>');
+        }
+    ")
+```
+
+
+

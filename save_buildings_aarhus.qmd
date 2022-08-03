@@ -1,0 +1,35 @@
+---
+title: "Bevaringsværdige bygninger i Aarhus"
+author: "Max Odsbjerg Pedersen"
+format: html
+editor: visual
+---
+
+```{r}
+library(leaflet)
+library(tidyverse)
+library(geojsonio)
+library(sp)
+library(raster)
+library(rgdal)
+library(sf)
+```
+
+
+
+```{r}
+buildings <- geojson_sp("data/save_buildings.geojson")
+```
+
+```{r}
+buildings <- spTransform(buildings, CRS("+proj=longlat +init=epsg:4326 +ellps=WGS84 +datum=WGS84 +no_defs"))
+```
+
+
+```{r}
+leaflet() %>% 
+  addProviderTiles("CartoDB.Positron", group = "Kort") %>% 
+  addProviderTiles("Esri.WorldImagery", group="Satelit") %>% 
+  addPolygons(data = buildings, popup = ~paste0("<b>", adresse, "</b><p>Saveværdi: ", save_, "</p>"), fillColor = ~save_)
+```
+
