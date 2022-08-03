@@ -2,4 +2,4 @@
 
 Here we are exploring Leaflet in R. 
 
-Working with polygons is pure fun.
+Much fun with polygons and points and colors and interactiveness
