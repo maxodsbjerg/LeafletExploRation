@@ -21,6 +21,7 @@ kommuner <- spTransform(kommuner, CRS("+proj=longlat +init=epsg:4326 +ellps=WGS8
 m <- leaflet() %>% 
   addProviderTiles("CartoDB.Positron", group = "Kort") %>% # Map background
   addProviderTiles("Esri.WorldImagery", group="Satelit") %>% # Satelitte background
-  addPolygons(data = kommuner)
-
+  addPolygons(data = kommuner,
+              popup = ~paste0('<b>', KOMNAVN, ' Kommune</b>'))
+                              
 saveWidget(m, file="danske_kommuner/kommuner.html")
