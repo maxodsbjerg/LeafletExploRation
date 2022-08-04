@@ -36,7 +36,9 @@ m <- leaflet() %>%
   addProviderTiles("CartoDB.Positron", group = "Kort") %>% # Map background
   addProviderTiles("Esri.WorldImagery", group="Satelit") %>% # Satelitte background
   addPolygons(data = buildings, # Add dataset to leaflet map as polygons 
-              popup = ~paste0("<b>", adresse, "</b><p>Saveværdi: ", save_, "</p>"), # Creates popup
+              popup = ~paste0('<b>', adresse, '</b>
+                              <p>Saveværdi: ', save_, '</p>
+                              <p><a href="',link,'" target="_blank">Se billeder og mere hos Slots- og Kulturarvsstyrelsen.</a></p>'), # Creates popup
               color = ~factpal(save_)) %>% # Add custom color palette to polygons
   addLegend(colors = c("#DD8D29", "#E2D200", "#46ACC8", "#FFC0CB"),
             values = buildings$save_, # Add values to legend
