@@ -7,10 +7,11 @@ library(raster)
 library(rgdal)
 library(htmlwidgets)
 library(sf)
+library(dplyr)
 
 # Imports data as an sf object through the geojsonsf package.
 ### Data from https://lab.information.dk/ 
-kommuner <- geojson_sf("data/dagi_ref_kommuner.geojson")
+kommuner <- geojson_sf("danske_kommuner/data/dagi_ref_kommuner.geojson")
 
 # Data has unneeded Z dimension. Removes this and converts to sp object
 kommuner <- st_zm(kommuner)
@@ -21,12 +22,16 @@ kommuner <- spTransform(kommuner, CRS("+proj=longlat +init=epsg:4326 +ellps=WGS8
 # Loading data from https://noegletal.dk/noegletal/ntStart.html 
 ## Download data as txt file to get proper encoding
 ## Further more the data has been transformed a little
-indbyg2022 <- read_csv2("danske_kommuner/data/kommune_indbyggere_2007_2022.csv")
+population <- read_csv2("danske_kommuner/data/kommune_indbyggere_2007_2022.csv")
+population <- dplyr::select(population, -Kom.nr)
+
 # Number of people pr square kilometers
-mnskr_pr_kvd_km <- read_csv2("danske_kommuner/data/kommune_befolkningstæthed_2007_2022.csv")
+pop_density <- read_csv2("danske_kommuner/data/kommune_befolkningstæthed_2007_2022.csv")
+pop_density <- dplyr::select(pop_density, -Kom.nr)
 
 # Joins data
-kommuner@data <- inner_join(kommuner@data, indbyg2022, by = "KOMNAVN")
+kommuner@data <- inner_join(kommuner@data, population, by = "KOMNAVN")
+kommuner@data <- inner_join(kommuner@data, pop_density, by = "KOMNAVN")
 
 #Color palette for populaion
 pal <- colorBin("YlOrRd", domain = indbyg2022$"2022")
