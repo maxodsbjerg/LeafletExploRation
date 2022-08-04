@@ -23,7 +23,7 @@ buildings$save_ <- factor(buildings$save_)
 
 # Creating the color palette for the SAVE value
 ### As of now this palette is not in use due to custom label names in the map
-factpal <- colorFactor(palette = c("#DD8D29", "#E2D200", "#46ACC8", "#FFC0CB"), 
+factpal <- colorFactor(palette = c("#DD8D29", "#E2D200", "#46ACC8", "#B40F20"), 
                        buildings$save_)
 
 title_html <- '<div style="width: 400px;">
@@ -38,7 +38,7 @@ m <- leaflet() %>%
   addPolygons(data = buildings, # Add dataset to leaflet map as polygons 
               popup = ~paste0("<b>", adresse, "</b><p>Saveværdi: ", save_, "</p>"), # Creates popup
               color = ~factpal(save_)) %>% # Add custom color palette to polygons
-  addLegend(colors = c("#DD8D29", "#E2D200", "#46ACC8", "#FFC0CB"),
+  addLegend(colors = c("#DD8D29", "#E2D200", "#46ACC8", "#B40F20"),
             values = buildings$save_, # Add values to legend
             opacity = 1,
             title = "SAVE Værdi",
